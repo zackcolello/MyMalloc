@@ -2,13 +2,14 @@
 
 
 
-void* mymalloc(unsigned int size){
+void* mymalloc(unsigned int size, const char* file, const int line){
 
-	struct mementry *root = NULL;
+	static struct mementry *root = NULL;
 	struct mementry* p = NULL;
 
-	static int initialized = 0;
+	static int initialized = 0; //use boolean to know if memblock has been initialized
 	static struct mementry *prev, *next;
+
 
 	if(!initialized){
 		root = (struct mementry*) memblock;
@@ -16,6 +17,8 @@ void* mymalloc(unsigned int size){
 		root->next = 0;
 		root->size = 5000 - sizeof(struct mementry);
 		root->isFree = 1;
+		root->recPattern = recP;
+
 		initialized = 1;
 	}
 
@@ -24,13 +27,20 @@ void* mymalloc(unsigned int size){
 
 	//find a block of memory big enough to allocate
 	do{
-		if((p->size < size )|| (p->isFree == 0)){
 
+
+
+		if((p->size < size )){
 			//current block of memory too small to allocate or
 			//p is not free
 			p = p->next;
-		}else if(p->size <= size + sizeof(struct mementry)){
+
+
+		}else if(p->isFree == 0){
 			
+			p = p->next;
+
+		}else if(p->size <= size + sizeof(struct mementry)){
 			//there is enough size for this mementry, but not create another
 			//mementry afterwords
 			
@@ -40,7 +50,6 @@ void* mymalloc(unsigned int size){
 
 		}else{
 			//enough size for mementry, put it there
-			
 			next = (struct mementry*)((char*) p + sizeof(struct mementry) + size);
 			next->prev = p;
 			next->next = p->next; 
@@ -61,16 +70,31 @@ void* mymalloc(unsigned int size){
 	
 	}while(p != 0);
 
-	return 0; //will put error message here
+
+	fprintf(stderr, "ERROR: Requested memory allocation at line %d in file %s of size %d is too large.\n", line, file, size);
+	_exit(0);
 
 }
 
-void myfree(void* p){
+void myfree(void* p, const char* file, int line){
+
+	if(p == NULL){
+		//trying to free unallocated variable	
+		fprintf(stderr, "ERROR: Requested free at line %d in file %s cannot be completed; the variable was not allocated.\n", line, file);
+		_exit(0);
+	
+	}
+
 
 	struct mementry *ptr, *prev, *next;
 
+
+	printf("cat from myfree is %s\n", p);
 	ptr = (struct mementry*)((char*) p - sizeof(struct mementry));
-	
+
+
+	printf("pointers size is %d\n", sizeof(p));
+	printf("mem entry size is %d\n", sizeof(struct mementry));	
 
 	//check if there is a previous and it is free
 	if(prev = ptr->prev != 0 && prev->isFree == 1){
@@ -102,19 +126,21 @@ void myfree(void* p){
 	}
 }
 
+#define mymalloc( x ) mymalloc( x, __FILE__, __LINE__)
+#define myfree( x ) myfree( x, __FILE__, __LINE__)
+
 int main(){
 
-	char* cat = (char*)mymalloc(200);
-	
-	strcpy(cat, "hello!");
-	printf("%s\n", cat);
+	char* cat;
 
 	myfree(cat);
 
-	char* dog = (char*)mymalloc(100); //prob here
+	//char* cat = (char*)mymalloc(2000);
+	
+	//strcpy(cat, "meow!");
 
-	strcpy(dog, "woof");
-	printf("%s\n", dog);
-	printf("%s\n", cat);
+//	char* dog = (char*)mymalloc(100); 
+//	strcpy(dog, "woof");
+//	printf("%s\n", dog);
 
 }
