@@ -85,16 +85,16 @@ void myfree(void* p, const char* file, int line){
 	
 	}
 
-
 	struct mementry *ptr, *prev, *next;
 
-
-	printf("cat from myfree is %s\n", p);
 	ptr = (struct mementry*)((char*) p - sizeof(struct mementry));
 
 
-	printf("pointers size is %d\n", sizeof(p));
-	printf("mem entry size is %d\n", sizeof(struct mementry));	
+	//check if this is an attempt to free something that has already been freed
+	if(ptr->isFree == -1){
+		fprintf(stderr, "ERROR: Attempt to free memory that has already been freed at line %d of file %s.\n", line, file);
+		_exit(0);
+	}
 
 	//check if there is a previous and it is free
 	if(prev = ptr->prev != 0 && prev->isFree == 1){
@@ -131,16 +131,15 @@ void myfree(void* p, const char* file, int line){
 
 int main(){
 
-	char* cat;
+	char* cat = (char*)mymalloc(100);
+	strcpy(cat, "meow");
+	char* dog = (char*)mymalloc(100);
+	strcpy(dog, "woof");
+	printf("%s\n", cat);
 
 	myfree(cat);
+	myfree(cat); //this throws an error now like it's supposed to
 
-	//char* cat = (char*)mymalloc(2000);
-	
-	//strcpy(cat, "meow!");
-
-//	char* dog = (char*)mymalloc(100); 
-//	strcpy(dog, "woof");
-//	printf("%s\n", dog);
+	//myfree(&cat); //this segfaults, but I think it gives a warning using regular malloc
 
 }
