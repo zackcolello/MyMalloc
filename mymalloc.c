@@ -23,7 +23,8 @@ void* mymalloc(unsigned int size, const char* file, const int line){
 	}
 
 	p = root;
-	
+
+
 
 	//find a block of memory big enough to allocate
 	do{
@@ -78,11 +79,24 @@ void* mymalloc(unsigned int size, const char* file, const int line){
 
 void myfree(void* p, const char* file, int line){
 
+
 	if(p == NULL){
 		//trying to free unallocated variable	
 		fprintf(stderr, "ERROR: Requested free at line %d in file %s cannot be completed; the variable was not allocated.\n", line, file);
 		_exit(0);
 	
+	}
+
+	int* intptr = p;
+	intptr--;
+
+	//check for recognition pattern that only occurs in heap variables  
+	if(*intptr != 113581321){
+
+		fprintf(stderr, "ERROR: Attempt to free non-heap variable at line %d of file %s.\n", line, file);
+		_exit(0);
+
+
 	}
 
 	struct mementry *ptr, *prev, *next;
@@ -133,13 +147,8 @@ int main(){
 
 	char* cat = (char*)mymalloc(100);
 	strcpy(cat, "meow");
-	char* dog = (char*)mymalloc(100);
-	strcpy(dog, "woof");
 	printf("%s\n", cat);
 
-	myfree(cat);
-	myfree(cat); //this throws an error now like it's supposed to
 
-	//myfree(&cat); //this segfaults, but I think it gives a warning using regular malloc
 
 }
