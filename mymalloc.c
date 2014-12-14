@@ -6,6 +6,41 @@ void leakDetection(){
 
 }
 
+
+void* myrealloc(void *ptr, unsigned int size){
+
+	if(size == 0){
+		myfree(ptr, __FILE__, __LINE__);
+		return NULL;
+	}
+	if(ptr == NULL){
+		return mymalloc(size, __FILE__, __LINE__);
+	}
+
+	int* intptr = ptr;
+	intptr--;
+
+	printf("intr from realoc is %d\n", *intptr);
+
+
+
+	char* temp = (char*)mymalloc(size, __FILE__, __LINE__);
+	
+	struct mementry *p = NULL;
+
+	p = (struct mementry*)((char*) ptr - sizeof(struct mementry));
+
+	printf("p size is %d\n", p->recPattern);
+
+	memcpy(temp, ptr, p->size);
+	
+	myfree(ptr, __FILE__, __LINE__);
+
+	return temp;
+
+
+}
+
 void* mycalloc(unsigned int num, unsigned int size, const char* file, const int line){
 
 
@@ -89,7 +124,6 @@ void* mymalloc(unsigned int size, const char* file, const int line){
 			
 				p->isFree = 0;
 				return (char*) p + sizeof(struct mementry);
-			
 
 			}else{
 				//enough size for mementry, put it there
@@ -107,7 +141,8 @@ void* mymalloc(unsigned int size, const char* file, const int line){
 				next->isFree = 1;
 				p->size = size;
 				p->isFree = 0;
-	
+				next->recPattern = recP;
+
 				return (char*) p + sizeof(struct mementry);
 			}			
 			
@@ -159,6 +194,7 @@ void* mymalloc(unsigned int size, const char* file, const int line){
 			next->isFree = 1;
 			p->size = size;
 			p->isFree = 0;
+			next->recPattern = recP;
 
 			return (char*) p + sizeof(struct mementry);
 		}
@@ -246,14 +282,6 @@ void myfree(void* p, const char* file, int line){
 #define mymalloc( x ) mymalloc( x, __FILE__, __LINE__)
 int main(){
 
-	char* catPtr = (char*)mymalloc(5);
-	strcpy(catPtr, "hiss");
-	printf("%s\n", catPtr);
-
-	int* five = mymalloc(2);
-	*five = 3;
-	printf("%d\n", *five);
-
 
 	char* dog = (char*)mymalloc(100);
 	strcpy(dog, "woof");
@@ -267,8 +295,11 @@ int main(){
 	strcpy(bird, "chirp");
 	printf("%s\n", bird);
 
+	char* newbird;
 
+	newbird = (char*)myrealloc(bird, 100);
 
+	printf("%s\n", bird);
 
 
 }
