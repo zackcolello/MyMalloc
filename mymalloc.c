@@ -1,11 +1,4 @@
 #include "mymalloc.h"
-void leakDetection(){
-
-	printf("hello from leakDetection :)\n");
-
-
-}
-
 
 void* myrealloc(void *ptr, unsigned int size){
 
@@ -20,17 +13,12 @@ void* myrealloc(void *ptr, unsigned int size){
 	int* intptr = ptr;
 	intptr--;
 
-	printf("intr from realoc is %d\n", *intptr);
-
-
 
 	char* temp = (char*)mymalloc(size, __FILE__, __LINE__);
 	
 	struct mementry *p = NULL;
 
 	p = (struct mementry*)((char*) ptr - sizeof(struct mementry));
-
-	printf("p size is %d\n", p->recPattern);
 
 	memcpy(temp, ptr, p->size);
 	
@@ -150,7 +138,8 @@ void* mymalloc(unsigned int size, const char* file, const int line){
 
 		}while (p != 0);
 
-		//if program gets here, no space large enough was found in the section for small allocations. set p to root and check the section for large allocations.
+		//if program gets here, no space large enough was found in the section for small allocations. 
+		//set p to root and check the section for large allocations.
 	}
 
 	p = root;
@@ -267,7 +256,7 @@ void myfree(void* p, const char* file, int line){
 	}
 
 	if((next = ptr->next) != 0 && next->isFree == 1){
-		
+	
 		prev->size += sizeof(struct mementry) + next->size;
 		prev->next = next->next;
 
@@ -282,25 +271,117 @@ void myfree(void* p, const char* file, int line){
 #define mymalloc( x ) mymalloc( x, __FILE__, __LINE__)
 int main(){
 
+	printf("Testing program. Program will terminate after running your test. Please enter the number corresponding to what you would like to test:\n");
+	printf("\n1 - Single char* mymalloc with myfree\n");
+	printf("2 - Multiple char* mymalloc with myfree\n");
+	printf("3 - Single char* mycalloc with myfree\n");
+	printf("4 - Multiple char* with mycalloc, mymalloc and myfree\n");
+	printf("5 - Single char* with mymalloc and myrealloc\n");
+	printf("6 - Multiple char* with mymalloc, myrealloc and mycalloc\n");
+	printf("\n");
+	printf("Error testing Options:\n");
+	printf("7 - Allocating too large of a size\n"); 
+	printf("8 - Attempt to free null variable\n");
+	printf("9 - Attempt to free something unable to be freed, e.g. bad pointer arithmetic\n");
+	printf("10 - Attempt to free something that has already been freed\n");
 
-	char* dog = (char*)mymalloc(100);
-	strcpy(dog, "woof");
-	printf("%s\n", dog);
+	int input;
+	scanf("%d", &input);
 
+	char* cat;
+	char* dog;
+	char* fish;
 
-	//test calloc
-	
-	char* bird = (char*)mycalloc(3, 12);
+	switch(input){
 
-	strcpy(bird, "chirp");
-	printf("%s\n", bird);
+		case 1: //malloc one char*
+			cat = (char*)mymalloc(10);
+			strcpy(cat, "Meow");
+			printf("cat has been allocated and holds the string '%s'.\n", cat);
+			myfree(cat);
+			printf("cat has been freed.\n");
+			break;
 
-	char* newbird;
+		case 2:
+			cat = (char*)mymalloc(10);
+			strcpy(cat, "Meow");
+			dog = (char*)mymalloc(10);
+			strcpy(dog, "Woof");
+			fish = (char*)mymalloc(10);
+			strcpy(fish, "Blub blub");	
+			printf("Cat, dog, and fish have been allocated. Cat holds string '%s', dog holds string '%s', and fish holds string '%s'.\n", cat, dog, fish);
+			myfree(cat); myfree(dog); myfree(fish);
+			printf("Cat, dog, and fish have been freed.\n");
+			break;
 
-	newbird = (char*)myrealloc(bird, 100);
+		case 3:
+			fish = (char*)mycalloc(7,2);
+			strcpy(fish, "Blub blub");
+			printf("Fish has been allocated with calloc and holds string '%s'.\n", fish);
+			myfree(fish);
+			printf("Fish has been freed.\n");
+			break;
+		
+		case 4:
+			cat = (char*)mymalloc(8);
+			strcpy(cat, "Meow");
+			dog = (char*)mycalloc(7, 3);
+			strcpy(dog, "Woof");
+			fish = (char*)mymalloc(4);
+			strcpy(fish, "Blub blub");
 
-	printf("%s\n", bird);
+			printf("Cat, dog, and fish have been allocated. Cat holds string '%s', dog holds string '%s', and fish holds string '%s'.\n", cat, dog, fish);
+			myfree(cat); myfree(dog); myfree(fish);
+			printf("Cat, dog, and fish have been freed.\n");
+			break;
 
+		case 5:
+			dog = (char*)mymalloc(9);
+			strcpy(dog, "Woof");
+			printf("dog after calling mymalloc is '%s'.\n", dog);
+			fish = (char*)myrealloc(dog, 11);
+			strcpy(fish, "New woof");
+			printf("fish after calling myrealloc with dog is '%s'.\n", fish);
+			break;
 
+		case 6:
+			dog = (char*)mymalloc(10);
+			strcpy(dog, "Woof");
+			cat = (char*)mymalloc(8);
+			strcpy(cat, "Meow");
+			dog = (char*)myrealloc(dog, 12);
+			strcpy(dog, "Hello");
+			fish = (char*)mycalloc(4, 5);
+			strcpy(fish, "Oh wow! A talking dog!");	
+
+			printf("Dog, cat, and fish have been allocated with mymalloc, myrealloc, and mycalloc.\n");
+			printf("Cat holds string '%s', dog holds string '%s', and fish holds string '%s'.\n", cat, dog, fish);
+			break;
+		
+		case 7:
+			printf("Attempting to allocate char* of size 3126567...\n");
+			dog = (char*)mymalloc(3126567);
+			break;
+
+		case 8:
+			fish = NULL;
+			printf("Attempting to free NULL variable...\n");
+			myfree(fish);
+		
+		case 9:
+			printf("Attempting to free variable + 2...\n");
+			cat = (char*)mymalloc(10);
+			myfree(cat + 2);
+
+		case 10:
+			printf("Attempting to free variable twice...\n");
+			cat = (char*)mymalloc(5);
+			strcpy(cat, "Meow");
+			myfree(cat);
+			myfree(cat);
+		default:
+			printf("Input not recognized. Terminating program.\n");
+			break;
+	}
 }
 

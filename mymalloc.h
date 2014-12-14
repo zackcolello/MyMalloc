@@ -25,7 +25,6 @@ struct mementry{
 
 
 void* mymalloc(unsigned int size, const char* file, const int line);
-void leakDetection();
 void myfree(void* p, const char* file, const int line);
 void* mycalloc(unsigned int num, unsigned int size, const char* file, const int line);
 void* myrealloc(void *ptr, unsigned int size);
