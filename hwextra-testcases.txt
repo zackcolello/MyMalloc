@@ -1,0 +1,95 @@
+Zack Colello and Anna Genke
+pa6 MyMalloc
+
+The following are test cases you could add to any function that calls one of our
+functions mymalloc, mycalloc, myrealloc, or myfree. 
+
+Test Cases
+
+mymalloc
+
+Test 1: Simple mymalloc and myfree
+
+	input: char* parrot = (char*)mymalloc(5);
+	       myfree(parrot);
+	output: (No printed output, but mymalloc and myfree was successful)
+
+Test 2: Multiple mymalloc and myfree
+
+	input: char* giraffe = (char*)mymalloc(6);
+	       char* dog = (char*)mymalloc(20);
+	       char* frog = (char*)mymalloc(17);
+	       myfree(giraffe); myfree(dog); myfree(frog);
+
+	output: (No printed, output, but mymalloc and myfree was successful)		
+
+mycalloc
+
+Test 1: mycalloc and myfree
+
+	input:  char* parrot = (char*)mycalloc(5, 2);
+		printf("%d\n", *parrot);
+		strcpy(parrot, "i");
+		printf("%d\n", *parrot);
+		myfree(parrot);
+
+	output: 0
+		105
+		(Here we tested and ensured that mycalloc initializes to zero,
+		and works with myfree)
+
+myrealloc
+
+Test 1: Simple myrealloc and myfree
+
+	input:  char* frog = (char*)mymalloc(8);
+		strcpy(frog, "ribbit");
+		printf("%s\n", frog);
+		char* newfrog = (char*)myrealloc(frog, 10);
+		printf("%s\n", newfrog); 
+		myfree(frog); myfree(newfrog);
+
+	output: ribbit
+		ribbit
+
+Error checking
+
+Test 1: Too large of a memory allocation
+
+	input:  char* animal = (char*)mymalloc(1234652);
+	output: ERROR: Requested memory allocation at line 275 in file
+		mymalloc.c of size 1234652  is too large.
+	
+Test 2: Attempt to free NULL pointer
+
+	input:  char* frog = NULL;
+		myfree(frog);
+
+	output: ERROR: Requested free at line 276 in file mymalloc.c cannot be completed; the
+		variable was not allocated.
+
+Test 3: Attempt to free with bad pointer arithmetic
+
+	input:  char* frog = (char*)mymalloc(100);
+		myfree(frog + 3);
+	
+	output:	ERROR: Attempt to free something that was not a pointer returned by
+		mymalloc at line 276 of file mymalloc.c.
+
+Test 4: Attempt to free static memory
+
+	input:  char frog[10];
+		myfree(frog);
+
+	output: ERROR: Attempt to free something that was not a pointer returned by mymalloc at
+		line 276 of file mymalloc.c.
+
+Test 5: Attempt to free variable that has already been freed
+
+	input:  char* cat = (char*)mymalloc(10);
+		myfree(cat);
+		myfree(cat);
+
+	output: ERROR: Attempt to free memory that has already been freed at line 277 of file
+		mymalloc.c.
+
